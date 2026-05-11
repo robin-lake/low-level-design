@@ -10,9 +10,9 @@ class Game:
             self.current_player = self.player2
         else:
             self.current_player = self.player1
-    def make_move(self, row, col):
+    def make_move(self, col):
         val = self.current_player.color[0]
-        result = self.board.insert_piece(row, col, val)
+        result = self.board.insert_piece(int(col) - 1, val)
         if result == False:
            return "illegal move, try again" 
         else:
@@ -31,9 +31,15 @@ class Board:
             row = ", ".join(map(str, self.board[i]))
             output += row + '\n'
         return output
-    def insert_piece(self, row, col, val):
-        r = int(row) - 1
-        c = int(col) -1
+    def insert_piece(self, col, val):
+        row = len(self.board) - 1
+        while row > 0:
+            if self.board[row][col] == 0:
+                break
+            else:
+                row -= 1
+        r = row
+        c = col
         if r > len(self.board) or c > len(self.board[0]) or self.board[r][c] != 0:
             return False
         self.board[r][c] = val 
@@ -43,8 +49,7 @@ class Board:
 game = Game()
 
 while game.winner is False:
-    row = input("enter row")
     col = input("enter column")
-    print(game.make_move(row, col))
+    print(game.make_move(col))
     print(game.board.show_board())
     print(f"{game.current_player.color}'s turn")
