@@ -16,14 +16,12 @@ class Game:
         if result == False:
            return "illegal move, try again" 
         else:
-            print(result)
             win = self.board.check_for_win(result[0], result[1], game.current_player.color)
-            print('win: ', win)
             if win:
                 self.winner = self.current_player
                 return print(f"{self.current_player.color} player won the match")
             self.increment_player()
-            return "successful move, showing board"
+            return "move complete, showing board"
 
 class Player:
     def __init__(self, color):
@@ -51,28 +49,21 @@ class Board:
         return [row, col] 
     def check_for_win(self, row, col, color) -> bool:
         directions = [[0,1], [1,0], [1,1], [-1,1]]
-        print('row, col, color: ', row, col, color)
         for rd, rc in directions:
             count = 1
             count += self.count_direction(row, col, rd, rc, color)
             count += self.count_direction(row, col, -rd, -rc, color)
             if count >= 4:
                 return True
-            print('count: ', count)
         return False
     def count_direction(self, row, col, rd, cd, color) -> int:
         count = 0
         r = row + rd
         c = col + cd
-        # print('r, c: ', r, c)
         while self.in_bounds(r, c) and self.board[r][c] == color[0]:
-        # print('self.board[r][c]: ', self.board[r][c])
-        # print('color[0]: ', color[0])
-            # print('foo')
             count += 1
             r += rd
             c += cd
-        # print('internal count: ', count)
         return count
     def in_bounds(self, row, col) -> bool:
         if row >= len(self.board) or col >= len(self.board[0]) or row < 0 or col < 0:
