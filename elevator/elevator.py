@@ -29,6 +29,8 @@ class Orchestrator:
             request = Request(floor, type)
             self.assign_request_to_elevator(request)
             self.requests.append(request)
+        else:
+            elevator.add_request(Request(floor, type))
     def assign_request_to_elevator(self, request):
         for elevator in self.elevators:
             # check if:
@@ -77,6 +79,19 @@ class Elevator:
             self.floor += 1
         elif self.direction == "DOWN" and self.floor > 1:
             self.floor -= 1
+        elif self.direction == "IDLE" and len(self.requests) > 0:
+            self.start_elevator()
+        self.complete_requests()
+    def start_elevator(self):
+        for request in self.requests:
+            if request.floor > self.floor:
+                self.direction = "UP"
+                break
+            elif request.floor < self.floor:
+                self.direction = "DOWN"
+                break
+
+    def complete_requests(self):
         requests_to_complete = []
         for request in self.requests:
             if request.floor == self.floor:
@@ -109,7 +124,11 @@ elevator2 = Elevator()
 elevator3 = Elevator()
 orchestrator = Orchestrator([elevator1, elevator2, elevator3])
 orchestrator.create_request(1, "PICKUP_UP", None)
+orchestrator.step()
 orchestrator.create_request(1, "PICKUP_UP", None)
+orchestrator.step()
+orchestrator.create_request(5, "DESTINATION", elevator1)
 orchestrator.create_request(3, "PICKUP_UP", None)
+orchestrator.step()
 orchestrator.show_requests()
 orchestrator.show_elevator_requests()
