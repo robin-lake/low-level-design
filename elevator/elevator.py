@@ -27,34 +27,44 @@ class Orchestrator:
     def create_request(self, floor, type, elevator):
         if elevator is None:
             request = Request(floor, type)
-            self.assign_request_to_elevator(request)
+            self.select_elevator(request)
             self.requests.append(request)
         else:
-            elevator.add_request(Request(floor, type))
-    def assign_request_to_elevator(self, request):
+            elevator.add_request(Request(floor, type), self.floors)
+    def select_elevator(self, request):
+        assigned = False
         for elevator in self.elevators:
-            # check if:
-            # elevator is higher than request and request is pickup down
-            # elevator is lower than request and request is pickup up
-            if elevator.get_current_floor() < request.get_floor() and elevator.get_direction == "UP" and request.get_request_type == "PICKUP_UP":
+            if elevator.get_current_floor() <= request.get_floor() and elevator.get_direction() == "UP" and request.get_request_type() == "PICKUP_UP":
                 elevator.add_request(request)
+                assigned = True
                 break
-            elif elevator.get_current_floor() > request.get_floor() and elevator.get_direction == "DOWN" and request.get_request_type == "PICKUP_DOWN": 
+            elif elevator.get_current_floor() >= request.get_floor() and elevator.get_direction() == "DOWN" and request.get_request_type() == "PICKUP_DOWN": 
                 elevator.add_request(request)
+                assigned = True
                 break
             elif elevator.get_direction() == "IDLE":
                 elevator.add_request(request)
+                assigned = True
                 break
+        if assigned is False:
+            self.elevators[0].add_request(request)
+
     def show_requests(self):
-        print("showing all requests")
+        print("** showing all requests")
         for request in self.requests:
             print(vars(request))
     def show_elevator_requests(self):
-        print("showing requests per elevator")
+        print("** showing requests per elevator")
         for i, elevator in enumerate(self.elevators):
             print(f"elevator {i}: ")
             for request in elevator.requests:
                 print(vars(request))
+    def show_elevator_statuses(self):
+        print("** showing elevator states")
+        for i, elevator in enumerate(self.elevators):
+            print(f"* elevator {i}: ")
+            print(f"floor: {elevator.get_current_floor()}")
+            print(f"direction: {elevator.get_direction()}")
 
 
 # class Elevator
@@ -75,11 +85,17 @@ class Elevator:
     def get_direction(self):
         return self.direction
     def step(self, max_floors):
+        if len(self.requests) == 0:
+            self.direction = "IDLE"
+            return
         if self.direction == "UP" and self.floor + 1 <= max_floors:
+            # print('going up')
             self.floor += 1
         elif self.direction == "DOWN" and self.floor > 1:
+            # print('going down')
             self.floor -= 1
         elif self.direction == "IDLE" and len(self.requests) > 0:
+            # print('starting elevator')
             self.start_elevator()
         self.complete_requests()
     def start_elevator(self):
@@ -95,11 +111,23 @@ class Elevator:
         requests_to_complete = []
         for request in self.requests:
             if request.floor == self.floor:
-                requests_to_complete.append(request)
+                if request.get_request_type() == "PICKUP_UP" and self.direction == "UP":
+                    requests_to_complete.append(request)
+                elif request.get_request_type() == "PICKUP_DOWN" and self.direction == "DOWN":
+                    requests_to_complete.append(request)
+                elif request.get_request_type() == "DESTINATION":
+                    requests_to_complete.append(request)
         for request in requests_to_complete:
             self.requests.remove(request)
-    def add_request(self, request):
+    def add_request(self, request, max_floors):
+        if request.get_floor() > max_floors or request.get_floor() < 1 or request.get_floor() == self.floor:
+            return "invalid request"
         self.requests.append(request)
+        if self.direction == "IDLE":
+            if request.get_floor() > self.floor:
+                self.direction = "UP"
+            if request.get_floor() < self.floor:
+                self.direction = "DOWN"
 
 # class Request
 # - floor: int
@@ -114,8 +142,6 @@ class Request:
         self.request_type = type
     def get_floor(self):
         return self.floor
-    def get_direction(self):
-        return self.direction
     def get_request_type(self):
         return self.request_type
 
@@ -130,5 +156,26 @@ orchestrator.step()
 orchestrator.create_request(5, "DESTINATION", elevator1)
 orchestrator.create_request(3, "PICKUP_UP", None)
 orchestrator.step()
-orchestrator.show_requests()
+# orchestrator.show_requests()
+# orchestrator.show_elevator_requests()
+# orchestrator.show_elevator_statuses()
+orchestrator.step()
+# orchestrator.show_elevator_statuses()
+orchestrator.step()
+orchestrator.step()
+orchestrator.step()
+orchestrator.step()
+orchestrator.step()
+orchestrator.show_elevator_statuses()
+orchestrator.create_request(2, "DESTINATION", elevator1)
+orchestrator.show_elevator_statuses()
+orchestrator.step()
+orchestrator.step()
+orchestrator.show_elevator_statuses()
+orchestrator.step()
+orchestrator.show_elevator_statuses()
+orchestrator.show_elevator_requests()
+orchestrator.step()
+orchestrator.step()
+orchestrator.show_elevator_statuses()
 orchestrator.show_elevator_requests()
