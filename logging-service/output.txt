@@ -1,0 +1,1 @@
+2026-05-27 12:00:20.706299 this thread DEBUG: created a log record
